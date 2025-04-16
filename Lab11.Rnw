@@ -55,7 +55,7 @@ print(power.result)
 
 In order to detect a moderate-to-large effect ($d=0.65$) when using 
 $\alpha=0.05$ and default power (0.80) for a two-sided one sample 
-$t$ test, researchers should use a sample size of at least ($n=21$).
+$t$ test, researchers should use a sample size of at least $n=21$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % COLLECT DATA
@@ -66,6 +66,34 @@ do to collect the data for Figure 2(g). Note that you only need the
 \texttt{closer\_vals} and \texttt{further\_vals}. Ensure to 
 \texttt{mutate()} the data to get a difference 
 (e.g., \texttt{closer\_vals - further\_vals}).
+
+In order to collect the data for figure 2(g), I would use the \texttt{g.Farther\_vals} (dopamine values when birds sang further away) and \texttt{g.Closer\_vals} (dopamine values when birds sang closer to the adult song) tabs in the excel file, and save each sheet as an individual CSV file. 
+
+Once both CSV files are opened in R, I would create a tibble with two columns, one that represents the values in the Farther data, and one that represents the values in the Closer data.
+
+Then, I would finally mutate the tibble and add a column that represents the difference between further and closer.
+
+<<>>=
+library(tidyverse)
+
+closer <- read_csv("g.Closer_vals.csv")
+further <- read_csv("g.Farther_vals.csv")
+
+colnames(closer) <- "Value"
+colnames(further) <- "Value"
+
+data <- tibble(
+  closer.vals = closer$Value,
+  further.vals = further$Value
+)
+
+data <- data |>
+  mutate(diff = closer.vals - further.vals)
+
+@
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUMMARIZE DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -74,13 +102,53 @@ do to collect the data for Figure 2(g). Note that you only need the
   \item Summarize the further data. Do the data suggest that
    dopamine in the brains of young zebra finches decreases when
    they sing further away?
+<<>>=
+further.summary <- data |>
+  summarise(
+    mean = mean(further.vals, na.rm = TRUE),
+    sd = sd(further.vals, na.rm = TRUE),
+    n = sum(!is.na(further.vals))
+  )
+
+further.summary
+@
+
+  The mean is significantly less than 0, which supports the idea that dopamine  
+  decreases when birds sing further away.
+   
    \item Summarize the closer data. Do the data suggest that
    dopamine in the brains of young zebra finches increases when
    they sing closer to their adult song?
+<<>>=
+summary.closer <- data |>
+  summarise(
+    mean = mean(closer.vals, na.rm = TRUE),
+    sd = sd(closer.vals, na.rm = TRUE),
+    n = sum(!is.na(closer.vals))
+  )
+
+summary.closer
+@
+  
+  The mean is greater than 0, which suggests that dopamine increases when birds sing closer to the target.
+   
   \item Summarize the paired differences. Do the data suggest
   that there is a difference between dopamine in the brains of
   young zebra finches when they sing further away compared to 
   closer to their adult song?
+<<>>=
+summary.diff <- data |>
+  summarise(
+    mean = mean(diff, na.rm = TRUE),
+    sd = sd(diff, na.rm = TRUE),
+    n = sum(!is.na(diff))
+  )
+
+summary.diff
+@
+
+  The mean is positive, which implies higher dopamine when singing closer vs. further.
+  
   \item \textbf{Optional Challenge:} Can you reproduce Figure 2(g)?
   Note that the you can use \texttt{geom\_errorbar()} to plot
   the range created by adding the mean $\pm$ one standard deviation.
@@ -97,6 +165,30 @@ correction of their $p$-values. I'm waiting to hear back from them via email!
   \item ``The close responses differed significantly from 0 ($p=1.63 \times 10^{-8}$).''
   \item ``The far responses differed significantly from 0 ($p=5.17 \times 10^{-8}$).''
   \item ``The difference between populations was significant ($p=1.04 \times10^{-8}$).''
+  
+<<>>=
+(t.closer <- t.test(data$closer.vals, mu = 0))
+(t.further <- t.test(data$further.vals, mu = 0))
+(t.paired <- t.test(data$closer.vals, data$further.vals, paired = TRUE))
+
+library(effectsize)
+
+g.closer <- hedges_g(data$closer.vals, mu = 0)
+(g.closer)
+
+g.further <- hedges_g(data$further.vals, mu = 0)
+(g.further)
+
+g.diff <- hedges_g(data$closer.vals, data$further.vals, paired = TRUE)
+(g.diff)
+@
+
+For the close responses, there is statistically discernible support for the researcher’s alternative hypothesis ($t=7.9945$,$p=4.34 \times 10^{-8}$, $g=1.58$, 95\% CI: 0.1121, 0.1903).
+
+For the far responses, there is statistically discernible support for the researcher’s alternative hypothesis ($t=-7.4785$,$p=1.337 \times 10^{-7}$, $g=-1.48$, 95\% CI: -0.2593, -0.1469).
+
+For the difference between close and far responses, there is statistically discernible support for the researcher’s alternative hypothesis ($t=8.1073$,$p=3.41 \times 10^{-8}$, $g=1.60$, 95\% CI: 0.2639, 0.4448).
+  
 \end{enumerate}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CONDUCT THE TESTS
@@ -105,8 +197,113 @@ correction of their $p$-values. I'm waiting to hear back from them via email!
 hypothesis testing plots for each part of the previous question.
 \begin{enumerate}
   \item Question 4, part(a).
+<<>>=
+x <- data$further.vals
+mu0 <- 0
+xbar <- mean(x)
+s <- sd(x)
+n <- length(x)
+t.stat <- (xbar - mu0)/(s/sqrt(n))
+
+R <- 1000
+resamples <- tibble(t = numeric(R))
+for(i in 1:R){
+  curr.sample <- sample(x = x, size = n, replace = TRUE)
+  resamples$t[i] <- (mean(curr.sample) - mu0)/(sd(curr.sample)/sqrt(n))
+}
+
+ggdat.t <- tibble(t = seq(-5, 5, length.out = 1000)) |>
+  mutate(pdf.null = dt(t, df = n - 1))
+ggdat.obs <- tibble(t = t.stat, y = 0)
+
+t.breaks <- c(-5, qt(0.025, df = n - 1), 0, qt(0.975, df = n - 1), 5, t.stat)
+xbar.breaks <- t.breaks * s/(sqrt(n)) + mu0
+
+ggplot() +
+  geom_line(data = ggdat.t, aes(x = t, y = pdf.null)) +
+  geom_hline(yintercept = 0) +
+  geom_ribbon(data = subset(ggdat.t, t <= qt(0.025, df = n - 1)), 
+              aes(x = t, ymin = 0, ymax = pdf.null), fill = "darkblue", alpha = 0.5) +
+  geom_ribbon(data = subset(ggdat.t, t >= qt(0.975, df = n - 1)), 
+              aes(x = t, ymin = 0, ymax = pdf.null), fill = "darkblue", alpha = 0.5) +
+  geom_ribbon(data = subset(ggdat.t, t >= t.stat), 
+              aes(x = t, ymin = 0, ymax = pdf.null), fill = "red", alpha = 0.25) +
+  geom_point(data = ggdat.obs, aes(x = t, y = y), color = "red") +
+  stat_density(data = resamples, aes(x = t), geom = "line", color = "darkblue") +
+  ylab("Density")
+@
   \item Question 4, part(b).
+<<>>=
+x <- data$closer.vals
+mu0 <- 0
+xbar <- mean(x)
+s <- sd(x)
+n <- length(x)
+t.stat <- (xbar - mu0)/(s/sqrt(n))
+
+R <- 1000
+resamples <- tibble(t = numeric(R))
+for(i in 1:R){
+  curr.sample <- sample(x = x, size = n, replace = TRUE)
+  resamples$t[i] <- (mean(curr.sample) - mu0)/(sd(curr.sample)/sqrt(n))
+}
+
+ggdat.t <- tibble(t = seq(-5, 5, length.out = 1000)) |>
+  mutate(pdf.null = dt(t, df = n - 1))
+ggdat.obs <- tibble(t = t.stat, y = 0)
+
+t.breaks <- c(-5, qt(0.025, df = n - 1), 0, qt(0.975, df = n - 1), 5, t.stat)
+xbar.breaks <- t.breaks * s/(sqrt(n)) + mu0
+
+ggplot() +
+  geom_line(data = ggdat.t, aes(x = t, y = pdf.null)) +
+  geom_hline(yintercept = 0) +
+  geom_ribbon(data = subset(ggdat.t, t <= qt(0.025, df = n - 1)), 
+              aes(x = t, ymin = 0, ymax = pdf.null), fill = "darkblue", alpha = 0.5) +
+  geom_ribbon(data = subset(ggdat.t, t >= qt(0.975, df = n - 1)), 
+              aes(x = t, ymin = 0, ymax = pdf.null), fill = "darkblue", alpha = 0.5) +
+  geom_ribbon(data = subset(ggdat.t, t >= t.stat), 
+              aes(x = t, ymin = 0, ymax = pdf.null), fill = "red", alpha = 0.25) +
+  geom_point(data = ggdat.obs, aes(x = t, y = y), color = "red") +
+  stat_density(data = resamples, aes(x = t), geom = "line", color = "darkblue") +
+  ylab("Density") 
+@
   \item Question 4, part(c).
+<<>>=
+  x <- data$closer.vals - data$further.vals
+mu0 <- 0
+xbar <- mean(x)
+s <- sd(x)
+n <- length(x)
+t.stat <- (xbar - mu0)/(s/sqrt(n))
+
+R <- 1000
+resamples <- tibble(t = numeric(R))
+for(i in 1:R){
+  curr.sample <- sample(x = x, size = n, replace = TRUE)
+  resamples$t[i] <- (mean(curr.sample) - mu0)/(sd(curr.sample)/sqrt(n))
+}
+
+ggdat.t <- tibble(t = seq(-5, 5, length.out = 1000)) |>
+  mutate(pdf.null = dt(t, df = n - 1))
+ggdat.obs <- tibble(t = t.stat, y = 0)
+
+t.breaks <- c(-5, qt(0.025, df = n - 1), 0, qt(0.975, df = n - 1), 5, t.stat)
+xbar.breaks <- t.breaks * s/(sqrt(n)) + mu0
+
+ggplot() +
+  geom_line(data = ggdat.t, aes(x = t, y = pdf.null)) +
+  geom_hline(yintercept = 0) +
+  geom_ribbon(data = subset(ggdat.t, t <= qt(0.025, df = n - 1)), 
+              aes(x = t, ymin = 0, ymax = pdf.null), fill = "darkblue", alpha = 0.5) +
+  geom_ribbon(data = subset(ggdat.t, t >= qt(0.975, df = n - 1)), 
+              aes(x = t, ymin = 0, ymax = pdf.null), fill = "darkblue", alpha = 0.5) +
+  geom_ribbon(data = subset(ggdat.t, t >= t.stat), 
+              aes(x = t, ymin = 0, ymax = pdf.null), fill = "red", alpha = 0.25) +
+  geom_point(data = ggdat.obs, aes(x = t, y = y), color = "red") +
+  stat_density(data = resamples, aes(x = t), geom = "line", color = "darkblue") +
+  ylab("Density") 
+@
 \end{enumerate}
 \end{enumerate}
 

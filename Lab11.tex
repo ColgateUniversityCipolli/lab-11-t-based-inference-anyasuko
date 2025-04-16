@@ -117,7 +117,7 @@ $t$ test.
 
 In order to detect a moderate-to-large effect ($d=0.65$) when using 
 $\alpha=0.05$ and default power (0.80) for a two-sided one sample 
-$t$ test, researchers should use a sample size of at least ($n=0$)
+$t$ test, researchers should use a sample size of at least $n=21$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % COLLECT DATA
@@ -128,6 +128,44 @@ do to collect the data for Figure 2(g). Note that you only need the
 \texttt{closer\_vals} and \texttt{further\_vals}. Ensure to 
 \texttt{mutate()} the data to get a difference 
 (e.g., \texttt{closer\_vals - further\_vals}).
+
+In order to collect the data for figure 2(g), I would use the \texttt{g.Farther\_vals} (dopamine values when birds sang further away) and \texttt{g.Closer\_vals} (dopamine values when birds sang closer to the adult song) tabs in the excel file, and save each sheet as an individual CSV file. 
+
+Once both CSV files are opened in R, I would create a tibble with two columns, one that represents the values in the Farther data, and one that represents the values in the Closer data.
+
+Then, I would finally mutate the tibble and add a column that represents the difference between further and closer.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{library}\hldef{(tidyverse)}
+
+\hldef{closer} \hlkwb{<-} \hlkwd{read_csv}\hldef{(}\hlsng{"g.Closer_vals.csv"}\hldef{)}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Rows: 24 Columns: 1\\\#\# -- Column specification --------------------------------------------------------\\\#\# Delimiter: "{},"{}\\\#\# dbl (1): 0.275714146\\\#\# \\\#\# i Use `spec()` to retrieve the full column specification for this data.\\\#\# i Specify the column types or set `show\_col\_types = FALSE` to quiet this message.}}\begin{alltt}
+\hldef{further} \hlkwb{<-} \hlkwd{read_csv}\hldef{(}\hlsng{"g.Farther_vals.csv"}\hldef{)}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Rows: 24 Columns: 1\\\#\# -- Column specification --------------------------------------------------------\\\#\# Delimiter: "{},"{}\\\#\# dbl (1): -0.191685046\\\#\# \\\#\# i Use `spec()` to retrieve the full column specification for this data.\\\#\# i Specify the column types or set `show\_col\_types = FALSE` to quiet this message.}}\begin{alltt}
+\hlkwd{colnames}\hldef{(closer)} \hlkwb{<-} \hlsng{"Value"}
+\hlkwd{colnames}\hldef{(further)} \hlkwb{<-} \hlsng{"Value"}
+
+\hldef{data} \hlkwb{<-} \hlkwd{tibble}\hldef{(}
+  \hlkwc{closer.vals} \hldef{= closer}\hlopt{$}\hldef{Value,}
+  \hlkwc{further.vals} \hldef{= further}\hlopt{$}\hldef{Value}
+\hldef{)}
+
+\hldef{data} \hlkwb{<-} \hldef{data |>}
+  \hlkwd{mutate}\hldef{(}\hlkwc{diff} \hldef{= closer.vals} \hlopt{-} \hldef{further.vals)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUMMARIZE DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -136,13 +174,83 @@ do to collect the data for Figure 2(g). Note that you only need the
   \item Summarize the further data. Do the data suggest that
    dopamine in the brains of young zebra finches decreases when
    they sing further away?
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hldef{further.summary} \hlkwb{<-} \hldef{data |>}
+  \hlkwd{summarise}\hldef{(}
+    \hlkwc{mean} \hldef{=} \hlkwd{mean}\hldef{(further.vals,} \hlkwc{na.rm} \hldef{=} \hlnum{TRUE}\hldef{),}
+    \hlkwc{sd} \hldef{=} \hlkwd{sd}\hldef{(further.vals,} \hlkwc{na.rm} \hldef{=} \hlnum{TRUE}\hldef{),}
+    \hlkwc{n} \hldef{=} \hlkwd{sum}\hldef{(}\hlopt{!}\hlkwd{is.na}\hldef{(further.vals))}
+  \hldef{)}
+
+\hldef{further.summary}
+\end{alltt}
+\begin{verbatim}
+## # A tibble: 1 x 3
+##     mean    sd     n
+##    <dbl> <dbl> <int>
+## 1 -0.203 0.133    24
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+  The mean is significantly less than 0, which supports the idea that dopamine  
+  decreases when birds sing further away.
+   
    \item Summarize the closer data. Do the data suggest that
    dopamine in the brains of young zebra finches increases when
    they sing closer to their adult song?
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hldef{summary.closer} \hlkwb{<-} \hldef{data |>}
+  \hlkwd{summarise}\hldef{(}
+    \hlkwc{mean} \hldef{=} \hlkwd{mean}\hldef{(closer.vals,} \hlkwc{na.rm} \hldef{=} \hlnum{TRUE}\hldef{),}
+    \hlkwc{sd} \hldef{=} \hlkwd{sd}\hldef{(closer.vals,} \hlkwc{na.rm} \hldef{=} \hlnum{TRUE}\hldef{),}
+    \hlkwc{n} \hldef{=} \hlkwd{sum}\hldef{(}\hlopt{!}\hlkwd{is.na}\hldef{(closer.vals))}
+  \hldef{)}
+
+\hldef{summary.closer}
+\end{alltt}
+\begin{verbatim}
+## # A tibble: 1 x 3
+##    mean     sd     n
+##   <dbl>  <dbl> <int>
+## 1 0.151 0.0927    24
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+  
+  The mean is greater than 0, which suggests that dopamine increases when birds sing closer to the target.
+   
   \item Summarize the paired differences. Do the data suggest
   that there is a difference between dopamine in the brains of
   young zebra finches when they sing further away compared to 
   closer to their adult song?
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hldef{summary.diff} \hlkwb{<-} \hldef{data |>}
+  \hlkwd{summarise}\hldef{(}
+    \hlkwc{mean} \hldef{=} \hlkwd{mean}\hldef{(diff,} \hlkwc{na.rm} \hldef{=} \hlnum{TRUE}\hldef{),}
+    \hlkwc{sd} \hldef{=} \hlkwd{sd}\hldef{(diff,} \hlkwc{na.rm} \hldef{=} \hlnum{TRUE}\hldef{),}
+    \hlkwc{n} \hldef{=} \hlkwd{sum}\hldef{(}\hlopt{!}\hlkwd{is.na}\hldef{(diff))}
+  \hldef{)}
+
+\hldef{summary.diff}
+\end{alltt}
+\begin{verbatim}
+## # A tibble: 1 x 3
+##    mean    sd     n
+##   <dbl> <dbl> <int>
+## 1 0.354 0.214    24
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+  The mean is positive, which implies higher dopamine when singing closer vs. further.
+  
   \item \textbf{Optional Challenge:} Can you reproduce Figure 2(g)?
   Note that the you can use \texttt{geom\_errorbar()} to plot
   the range created by adding the mean $\pm$ one standard deviation.
@@ -159,6 +267,99 @@ correction of their $p$-values. I'm waiting to hear back from them via email!
   \item ``The close responses differed significantly from 0 ($p=1.63 \times 10^{-8}$).''
   \item ``The far responses differed significantly from 0 ($p=5.17 \times 10^{-8}$).''
   \item ``The difference between populations was significant ($p=1.04 \times10^{-8}$).''
+  
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hldef{(t.closer} \hlkwb{<-} \hlkwd{t.test}\hldef{(data}\hlopt{$}\hldef{closer.vals,} \hlkwc{mu} \hldef{=} \hlnum{0}\hldef{))}
+\end{alltt}
+\begin{verbatim}
+## 
+## 	One Sample t-test
+## 
+## data:  data$closer.vals
+## t = 7.9945, df = 23, p-value = 4.34e-08
+## alternative hypothesis: true mean is not equal to 0
+## 95 percent confidence interval:
+##  0.1121084 0.1903801
+## sample estimates:
+## mean of x 
+## 0.1512443
+\end{verbatim}
+\begin{alltt}
+\hldef{(t.further} \hlkwb{<-} \hlkwd{t.test}\hldef{(data}\hlopt{$}\hldef{further.vals,} \hlkwc{mu} \hldef{=} \hlnum{0}\hldef{))}
+\end{alltt}
+\begin{verbatim}
+## 
+## 	One Sample t-test
+## 
+## data:  data$further.vals
+## t = -7.4785, df = 23, p-value = 1.337e-07
+## alternative hypothesis: true mean is not equal to 0
+## 95 percent confidence interval:
+##  -0.2593882 -0.1469806
+## sample estimates:
+##  mean of x 
+## -0.2031844
+\end{verbatim}
+\begin{alltt}
+\hldef{(t.paired} \hlkwb{<-} \hlkwd{t.test}\hldef{(data}\hlopt{$}\hldef{closer.vals, data}\hlopt{$}\hldef{further.vals,} \hlkwc{paired} \hldef{=} \hlnum{TRUE}\hldef{))}
+\end{alltt}
+\begin{verbatim}
+## 
+## 	Paired t-test
+## 
+## data:  data$closer.vals and data$further.vals
+## t = 8.1073, df = 23, p-value = 3.41e-08
+## alternative hypothesis: true mean difference is not equal to 0
+## 95 percent confidence interval:
+##  0.2639927 0.4448646
+## sample estimates:
+## mean difference 
+##       0.3544287
+\end{verbatim}
+\begin{alltt}
+\hlkwd{library}\hldef{(effectsize)}
+
+\hldef{g.closer} \hlkwb{<-} \hlkwd{hedges_g}\hldef{(data}\hlopt{$}\hldef{closer.vals,} \hlkwc{mu} \hldef{=} \hlnum{0}\hldef{)}
+\hldef{(g.closer)}
+\end{alltt}
+\begin{verbatim}
+## Hedges' g |       95% CI
+## ------------------------
+## 1.58      | [0.97, 2.17]
+\end{verbatim}
+\begin{alltt}
+\hldef{g.further} \hlkwb{<-} \hlkwd{hedges_g}\hldef{(data}\hlopt{$}\hldef{further.vals,} \hlkwc{mu} \hldef{=} \hlnum{0}\hldef{)}
+\hldef{(g.further)}
+\end{alltt}
+\begin{verbatim}
+## Hedges' g |         95% CI
+## --------------------------
+## -1.48     | [-2.04, -0.89]
+\end{verbatim}
+\begin{alltt}
+\hldef{g.diff} \hlkwb{<-} \hlkwd{hedges_g}\hldef{(data}\hlopt{$}\hldef{closer.vals, data}\hlopt{$}\hldef{further.vals,} \hlkwc{paired} \hldef{=} \hlnum{TRUE}\hldef{)}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# For paired samples, 'repeated\_measures\_d()' provides more options.}}\begin{alltt}
+\hldef{(g.diff)}
+\end{alltt}
+\begin{verbatim}
+## Hedges' g |       95% CI
+## ------------------------
+## 1.60      | [0.99, 2.19]
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+For the close responses, there is statistically discernible support for the researcher’s alternative hypothesis ($t=7.9945$,$p=4.34 \times 10^{-8}$, $g=1.58$, 95\% CI: 0.1121, 0.1903).
+
+For the far responses, there is statistically discernible support for the researcher’s alternative hypothesis ($t=-7.4785$,$p=1.337 \times 10^{-7}$, $g=-1.48$, 95\% CI: -0.2593, -0.1469).
+
+For the difference between close and far responses, there is statistically discernible support for the researcher’s alternative hypothesis ($t=8.1073$,$p=3.41 \times 10^{-8}$, $g=1.60$, 95\% CI: 0.2639, 0.4448).
+  
 \end{enumerate}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CONDUCT THE TESTS
@@ -167,8 +368,128 @@ correction of their $p$-values. I'm waiting to hear back from them via email!
 hypothesis testing plots for each part of the previous question.
 \begin{enumerate}
   \item Question 4, part(a).
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hldef{x} \hlkwb{<-} \hldef{data}\hlopt{$}\hldef{further.vals}
+\hldef{mu0} \hlkwb{<-} \hlnum{0}
+\hldef{xbar} \hlkwb{<-} \hlkwd{mean}\hldef{(x)}
+\hldef{s} \hlkwb{<-} \hlkwd{sd}\hldef{(x)}
+\hldef{n} \hlkwb{<-} \hlkwd{length}\hldef{(x)}
+\hldef{t.stat} \hlkwb{<-} \hldef{(xbar} \hlopt{-} \hldef{mu0)}\hlopt{/}\hldef{(s}\hlopt{/}\hlkwd{sqrt}\hldef{(n))}
+
+\hldef{R} \hlkwb{<-} \hlnum{1000}
+\hldef{resamples} \hlkwb{<-} \hlkwd{tibble}\hldef{(}\hlkwc{t} \hldef{=} \hlkwd{numeric}\hldef{(R))}
+\hlkwa{for}\hldef{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hldef{R)\{}
+  \hldef{curr.sample} \hlkwb{<-} \hlkwd{sample}\hldef{(}\hlkwc{x} \hldef{= x,} \hlkwc{size} \hldef{= n,} \hlkwc{replace} \hldef{=} \hlnum{TRUE}\hldef{)}
+  \hldef{resamples}\hlopt{$}\hldef{t[i]} \hlkwb{<-} \hldef{(}\hlkwd{mean}\hldef{(curr.sample)} \hlopt{-} \hldef{mu0)}\hlopt{/}\hldef{(}\hlkwd{sd}\hldef{(curr.sample)}\hlopt{/}\hlkwd{sqrt}\hldef{(n))}
+\hldef{\}}
+
+\hldef{ggdat.t} \hlkwb{<-} \hlkwd{tibble}\hldef{(}\hlkwc{t} \hldef{=} \hlkwd{seq}\hldef{(}\hlopt{-}\hlnum{5}\hldef{,} \hlnum{5}\hldef{,} \hlkwc{length.out} \hldef{=} \hlnum{1000}\hldef{)) |>}
+  \hlkwd{mutate}\hldef{(}\hlkwc{pdf.null} \hldef{=} \hlkwd{dt}\hldef{(t,} \hlkwc{df} \hldef{= n} \hlopt{-} \hlnum{1}\hldef{))}
+\hldef{ggdat.obs} \hlkwb{<-} \hlkwd{tibble}\hldef{(}\hlkwc{t} \hldef{= t.stat,} \hlkwc{y} \hldef{=} \hlnum{0}\hldef{)}
+
+\hldef{t.breaks} \hlkwb{<-} \hlkwd{c}\hldef{(}\hlopt{-}\hlnum{5}\hldef{,} \hlkwd{qt}\hldef{(}\hlnum{0.025}\hldef{,} \hlkwc{df} \hldef{= n} \hlopt{-} \hlnum{1}\hldef{),} \hlnum{0}\hldef{,} \hlkwd{qt}\hldef{(}\hlnum{0.975}\hldef{,} \hlkwc{df} \hldef{= n} \hlopt{-} \hlnum{1}\hldef{),} \hlnum{5}\hldef{, t.stat)}
+\hldef{xbar.breaks} \hlkwb{<-} \hldef{t.breaks} \hlopt{*} \hldef{s}\hlopt{/}\hldef{(}\hlkwd{sqrt}\hldef{(n))} \hlopt{+} \hldef{mu0}
+
+\hlkwd{ggplot}\hldef{()} \hlopt{+}
+  \hlkwd{geom_line}\hldef{(}\hlkwc{data} \hldef{= ggdat.t,} \hlkwd{aes}\hldef{(}\hlkwc{x} \hldef{= t,} \hlkwc{y} \hldef{= pdf.null))} \hlopt{+}
+  \hlkwd{geom_hline}\hldef{(}\hlkwc{yintercept} \hldef{=} \hlnum{0}\hldef{)} \hlopt{+}
+  \hlkwd{geom_ribbon}\hldef{(}\hlkwc{data} \hldef{=} \hlkwd{subset}\hldef{(ggdat.t, t} \hlopt{<=} \hlkwd{qt}\hldef{(}\hlnum{0.025}\hldef{,} \hlkwc{df} \hldef{= n} \hlopt{-} \hlnum{1}\hldef{)),}
+              \hlkwd{aes}\hldef{(}\hlkwc{x} \hldef{= t,} \hlkwc{ymin} \hldef{=} \hlnum{0}\hldef{,} \hlkwc{ymax} \hldef{= pdf.null),} \hlkwc{fill} \hldef{=} \hlsng{"darkblue"}\hldef{,} \hlkwc{alpha} \hldef{=} \hlnum{0.5}\hldef{)} \hlopt{+}
+  \hlkwd{geom_ribbon}\hldef{(}\hlkwc{data} \hldef{=} \hlkwd{subset}\hldef{(ggdat.t, t} \hlopt{>=} \hlkwd{qt}\hldef{(}\hlnum{0.975}\hldef{,} \hlkwc{df} \hldef{= n} \hlopt{-} \hlnum{1}\hldef{)),}
+              \hlkwd{aes}\hldef{(}\hlkwc{x} \hldef{= t,} \hlkwc{ymin} \hldef{=} \hlnum{0}\hldef{,} \hlkwc{ymax} \hldef{= pdf.null),} \hlkwc{fill} \hldef{=} \hlsng{"darkblue"}\hldef{,} \hlkwc{alpha} \hldef{=} \hlnum{0.5}\hldef{)} \hlopt{+}
+  \hlkwd{geom_ribbon}\hldef{(}\hlkwc{data} \hldef{=} \hlkwd{subset}\hldef{(ggdat.t, t} \hlopt{>=} \hldef{t.stat),}
+              \hlkwd{aes}\hldef{(}\hlkwc{x} \hldef{= t,} \hlkwc{ymin} \hldef{=} \hlnum{0}\hldef{,} \hlkwc{ymax} \hldef{= pdf.null),} \hlkwc{fill} \hldef{=} \hlsng{"red"}\hldef{,} \hlkwc{alpha} \hldef{=} \hlnum{0.25}\hldef{)} \hlopt{+}
+  \hlkwd{geom_point}\hldef{(}\hlkwc{data} \hldef{= ggdat.obs,} \hlkwd{aes}\hldef{(}\hlkwc{x} \hldef{= t,} \hlkwc{y} \hldef{= y),} \hlkwc{color} \hldef{=} \hlsng{"red"}\hldef{)} \hlopt{+}
+  \hlkwd{stat_density}\hldef{(}\hlkwc{data} \hldef{= resamples,} \hlkwd{aes}\hldef{(}\hlkwc{x} \hldef{= t),} \hlkwc{geom} \hldef{=} \hlsng{"line"}\hldef{,} \hlkwc{color} \hldef{=} \hlsng{"darkblue"}\hldef{)} \hlopt{+}
+  \hlkwd{ylab}\hldef{(}\hlsng{"Density"}\hldef{)}
+\end{alltt}
+\end{kframe}
+\includegraphics[width=\maxwidth]{figure/unnamed-chunk-8-1} 
+\end{knitrout}
   \item Question 4, part(b).
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hldef{x} \hlkwb{<-} \hldef{data}\hlopt{$}\hldef{closer.vals}
+\hldef{mu0} \hlkwb{<-} \hlnum{0}
+\hldef{xbar} \hlkwb{<-} \hlkwd{mean}\hldef{(x)}
+\hldef{s} \hlkwb{<-} \hlkwd{sd}\hldef{(x)}
+\hldef{n} \hlkwb{<-} \hlkwd{length}\hldef{(x)}
+\hldef{t.stat} \hlkwb{<-} \hldef{(xbar} \hlopt{-} \hldef{mu0)}\hlopt{/}\hldef{(s}\hlopt{/}\hlkwd{sqrt}\hldef{(n))}
+
+\hldef{R} \hlkwb{<-} \hlnum{1000}
+\hldef{resamples} \hlkwb{<-} \hlkwd{tibble}\hldef{(}\hlkwc{t} \hldef{=} \hlkwd{numeric}\hldef{(R))}
+\hlkwa{for}\hldef{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hldef{R)\{}
+  \hldef{curr.sample} \hlkwb{<-} \hlkwd{sample}\hldef{(}\hlkwc{x} \hldef{= x,} \hlkwc{size} \hldef{= n,} \hlkwc{replace} \hldef{=} \hlnum{TRUE}\hldef{)}
+  \hldef{resamples}\hlopt{$}\hldef{t[i]} \hlkwb{<-} \hldef{(}\hlkwd{mean}\hldef{(curr.sample)} \hlopt{-} \hldef{mu0)}\hlopt{/}\hldef{(}\hlkwd{sd}\hldef{(curr.sample)}\hlopt{/}\hlkwd{sqrt}\hldef{(n))}
+\hldef{\}}
+
+\hldef{ggdat.t} \hlkwb{<-} \hlkwd{tibble}\hldef{(}\hlkwc{t} \hldef{=} \hlkwd{seq}\hldef{(}\hlopt{-}\hlnum{5}\hldef{,} \hlnum{5}\hldef{,} \hlkwc{length.out} \hldef{=} \hlnum{1000}\hldef{)) |>}
+  \hlkwd{mutate}\hldef{(}\hlkwc{pdf.null} \hldef{=} \hlkwd{dt}\hldef{(t,} \hlkwc{df} \hldef{= n} \hlopt{-} \hlnum{1}\hldef{))}
+\hldef{ggdat.obs} \hlkwb{<-} \hlkwd{tibble}\hldef{(}\hlkwc{t} \hldef{= t.stat,} \hlkwc{y} \hldef{=} \hlnum{0}\hldef{)}
+
+\hldef{t.breaks} \hlkwb{<-} \hlkwd{c}\hldef{(}\hlopt{-}\hlnum{5}\hldef{,} \hlkwd{qt}\hldef{(}\hlnum{0.025}\hldef{,} \hlkwc{df} \hldef{= n} \hlopt{-} \hlnum{1}\hldef{),} \hlnum{0}\hldef{,} \hlkwd{qt}\hldef{(}\hlnum{0.975}\hldef{,} \hlkwc{df} \hldef{= n} \hlopt{-} \hlnum{1}\hldef{),} \hlnum{5}\hldef{, t.stat)}
+\hldef{xbar.breaks} \hlkwb{<-} \hldef{t.breaks} \hlopt{*} \hldef{s}\hlopt{/}\hldef{(}\hlkwd{sqrt}\hldef{(n))} \hlopt{+} \hldef{mu0}
+
+\hlkwd{ggplot}\hldef{()} \hlopt{+}
+  \hlkwd{geom_line}\hldef{(}\hlkwc{data} \hldef{= ggdat.t,} \hlkwd{aes}\hldef{(}\hlkwc{x} \hldef{= t,} \hlkwc{y} \hldef{= pdf.null))} \hlopt{+}
+  \hlkwd{geom_hline}\hldef{(}\hlkwc{yintercept} \hldef{=} \hlnum{0}\hldef{)} \hlopt{+}
+  \hlkwd{geom_ribbon}\hldef{(}\hlkwc{data} \hldef{=} \hlkwd{subset}\hldef{(ggdat.t, t} \hlopt{<=} \hlkwd{qt}\hldef{(}\hlnum{0.025}\hldef{,} \hlkwc{df} \hldef{= n} \hlopt{-} \hlnum{1}\hldef{)),}
+              \hlkwd{aes}\hldef{(}\hlkwc{x} \hldef{= t,} \hlkwc{ymin} \hldef{=} \hlnum{0}\hldef{,} \hlkwc{ymax} \hldef{= pdf.null),} \hlkwc{fill} \hldef{=} \hlsng{"darkblue"}\hldef{,} \hlkwc{alpha} \hldef{=} \hlnum{0.5}\hldef{)} \hlopt{+}
+  \hlkwd{geom_ribbon}\hldef{(}\hlkwc{data} \hldef{=} \hlkwd{subset}\hldef{(ggdat.t, t} \hlopt{>=} \hlkwd{qt}\hldef{(}\hlnum{0.975}\hldef{,} \hlkwc{df} \hldef{= n} \hlopt{-} \hlnum{1}\hldef{)),}
+              \hlkwd{aes}\hldef{(}\hlkwc{x} \hldef{= t,} \hlkwc{ymin} \hldef{=} \hlnum{0}\hldef{,} \hlkwc{ymax} \hldef{= pdf.null),} \hlkwc{fill} \hldef{=} \hlsng{"darkblue"}\hldef{,} \hlkwc{alpha} \hldef{=} \hlnum{0.5}\hldef{)} \hlopt{+}
+  \hlkwd{geom_ribbon}\hldef{(}\hlkwc{data} \hldef{=} \hlkwd{subset}\hldef{(ggdat.t, t} \hlopt{>=} \hldef{t.stat),}
+              \hlkwd{aes}\hldef{(}\hlkwc{x} \hldef{= t,} \hlkwc{ymin} \hldef{=} \hlnum{0}\hldef{,} \hlkwc{ymax} \hldef{= pdf.null),} \hlkwc{fill} \hldef{=} \hlsng{"red"}\hldef{,} \hlkwc{alpha} \hldef{=} \hlnum{0.25}\hldef{)} \hlopt{+}
+  \hlkwd{geom_point}\hldef{(}\hlkwc{data} \hldef{= ggdat.obs,} \hlkwd{aes}\hldef{(}\hlkwc{x} \hldef{= t,} \hlkwc{y} \hldef{= y),} \hlkwc{color} \hldef{=} \hlsng{"red"}\hldef{)} \hlopt{+}
+  \hlkwd{stat_density}\hldef{(}\hlkwc{data} \hldef{= resamples,} \hlkwd{aes}\hldef{(}\hlkwc{x} \hldef{= t),} \hlkwc{geom} \hldef{=} \hlsng{"line"}\hldef{,} \hlkwc{color} \hldef{=} \hlsng{"darkblue"}\hldef{)} \hlopt{+}
+  \hlkwd{ylab}\hldef{(}\hlsng{"Density"}\hldef{)}
+\end{alltt}
+\end{kframe}
+\includegraphics[width=\maxwidth]{figure/unnamed-chunk-9-1} 
+\end{knitrout}
   \item Question 4, part(c).
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+  \hldef{x} \hlkwb{<-} \hldef{data}\hlopt{$}\hldef{closer.vals} \hlopt{-} \hldef{data}\hlopt{$}\hldef{further.vals}
+\hldef{mu0} \hlkwb{<-} \hlnum{0}
+\hldef{xbar} \hlkwb{<-} \hlkwd{mean}\hldef{(x)}
+\hldef{s} \hlkwb{<-} \hlkwd{sd}\hldef{(x)}
+\hldef{n} \hlkwb{<-} \hlkwd{length}\hldef{(x)}
+\hldef{t.stat} \hlkwb{<-} \hldef{(xbar} \hlopt{-} \hldef{mu0)}\hlopt{/}\hldef{(s}\hlopt{/}\hlkwd{sqrt}\hldef{(n))}
+
+\hldef{R} \hlkwb{<-} \hlnum{1000}
+\hldef{resamples} \hlkwb{<-} \hlkwd{tibble}\hldef{(}\hlkwc{t} \hldef{=} \hlkwd{numeric}\hldef{(R))}
+\hlkwa{for}\hldef{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hldef{R)\{}
+  \hldef{curr.sample} \hlkwb{<-} \hlkwd{sample}\hldef{(}\hlkwc{x} \hldef{= x,} \hlkwc{size} \hldef{= n,} \hlkwc{replace} \hldef{=} \hlnum{TRUE}\hldef{)}
+  \hldef{resamples}\hlopt{$}\hldef{t[i]} \hlkwb{<-} \hldef{(}\hlkwd{mean}\hldef{(curr.sample)} \hlopt{-} \hldef{mu0)}\hlopt{/}\hldef{(}\hlkwd{sd}\hldef{(curr.sample)}\hlopt{/}\hlkwd{sqrt}\hldef{(n))}
+\hldef{\}}
+
+\hldef{ggdat.t} \hlkwb{<-} \hlkwd{tibble}\hldef{(}\hlkwc{t} \hldef{=} \hlkwd{seq}\hldef{(}\hlopt{-}\hlnum{5}\hldef{,} \hlnum{5}\hldef{,} \hlkwc{length.out} \hldef{=} \hlnum{1000}\hldef{)) |>}
+  \hlkwd{mutate}\hldef{(}\hlkwc{pdf.null} \hldef{=} \hlkwd{dt}\hldef{(t,} \hlkwc{df} \hldef{= n} \hlopt{-} \hlnum{1}\hldef{))}
+\hldef{ggdat.obs} \hlkwb{<-} \hlkwd{tibble}\hldef{(}\hlkwc{t} \hldef{= t.stat,} \hlkwc{y} \hldef{=} \hlnum{0}\hldef{)}
+
+\hldef{t.breaks} \hlkwb{<-} \hlkwd{c}\hldef{(}\hlopt{-}\hlnum{5}\hldef{,} \hlkwd{qt}\hldef{(}\hlnum{0.025}\hldef{,} \hlkwc{df} \hldef{= n} \hlopt{-} \hlnum{1}\hldef{),} \hlnum{0}\hldef{,} \hlkwd{qt}\hldef{(}\hlnum{0.975}\hldef{,} \hlkwc{df} \hldef{= n} \hlopt{-} \hlnum{1}\hldef{),} \hlnum{5}\hldef{, t.stat)}
+\hldef{xbar.breaks} \hlkwb{<-} \hldef{t.breaks} \hlopt{*} \hldef{s}\hlopt{/}\hldef{(}\hlkwd{sqrt}\hldef{(n))} \hlopt{+} \hldef{mu0}
+
+\hlkwd{ggplot}\hldef{()} \hlopt{+}
+  \hlkwd{geom_line}\hldef{(}\hlkwc{data} \hldef{= ggdat.t,} \hlkwd{aes}\hldef{(}\hlkwc{x} \hldef{= t,} \hlkwc{y} \hldef{= pdf.null))} \hlopt{+}
+  \hlkwd{geom_hline}\hldef{(}\hlkwc{yintercept} \hldef{=} \hlnum{0}\hldef{)} \hlopt{+}
+  \hlkwd{geom_ribbon}\hldef{(}\hlkwc{data} \hldef{=} \hlkwd{subset}\hldef{(ggdat.t, t} \hlopt{<=} \hlkwd{qt}\hldef{(}\hlnum{0.025}\hldef{,} \hlkwc{df} \hldef{= n} \hlopt{-} \hlnum{1}\hldef{)),}
+              \hlkwd{aes}\hldef{(}\hlkwc{x} \hldef{= t,} \hlkwc{ymin} \hldef{=} \hlnum{0}\hldef{,} \hlkwc{ymax} \hldef{= pdf.null),} \hlkwc{fill} \hldef{=} \hlsng{"darkblue"}\hldef{,} \hlkwc{alpha} \hldef{=} \hlnum{0.5}\hldef{)} \hlopt{+}
+  \hlkwd{geom_ribbon}\hldef{(}\hlkwc{data} \hldef{=} \hlkwd{subset}\hldef{(ggdat.t, t} \hlopt{>=} \hlkwd{qt}\hldef{(}\hlnum{0.975}\hldef{,} \hlkwc{df} \hldef{= n} \hlopt{-} \hlnum{1}\hldef{)),}
+              \hlkwd{aes}\hldef{(}\hlkwc{x} \hldef{= t,} \hlkwc{ymin} \hldef{=} \hlnum{0}\hldef{,} \hlkwc{ymax} \hldef{= pdf.null),} \hlkwc{fill} \hldef{=} \hlsng{"darkblue"}\hldef{,} \hlkwc{alpha} \hldef{=} \hlnum{0.5}\hldef{)} \hlopt{+}
+  \hlkwd{geom_ribbon}\hldef{(}\hlkwc{data} \hldef{=} \hlkwd{subset}\hldef{(ggdat.t, t} \hlopt{>=} \hldef{t.stat),}
+              \hlkwd{aes}\hldef{(}\hlkwc{x} \hldef{= t,} \hlkwc{ymin} \hldef{=} \hlnum{0}\hldef{,} \hlkwc{ymax} \hldef{= pdf.null),} \hlkwc{fill} \hldef{=} \hlsng{"red"}\hldef{,} \hlkwc{alpha} \hldef{=} \hlnum{0.25}\hldef{)} \hlopt{+}
+  \hlkwd{geom_point}\hldef{(}\hlkwc{data} \hldef{= ggdat.obs,} \hlkwd{aes}\hldef{(}\hlkwc{x} \hldef{= t,} \hlkwc{y} \hldef{= y),} \hlkwc{color} \hldef{=} \hlsng{"red"}\hldef{)} \hlopt{+}
+  \hlkwd{stat_density}\hldef{(}\hlkwc{data} \hldef{= resamples,} \hlkwd{aes}\hldef{(}\hlkwc{x} \hldef{= t),} \hlkwc{geom} \hldef{=} \hlsng{"line"}\hldef{,} \hlkwc{color} \hldef{=} \hlsng{"darkblue"}\hldef{)} \hlopt{+}
+  \hlkwd{ylab}\hldef{(}\hlsng{"Density"}\hldef{)}
+\end{alltt}
+\end{kframe}
+\includegraphics[width=\maxwidth]{figure/unnamed-chunk-10-1} 
+\end{knitrout}
 \end{enumerate}
 \end{enumerate}
 
